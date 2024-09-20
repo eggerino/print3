@@ -1,11 +1,11 @@
 CC = gcc
-
+SRC = src/main.c src/scene.c src/viewer.c
 RAYLIB_VERSION = 5.0
 RAYLIB_FLAGS = -I dep/raylib-$(RAYLIB_VERSION)_linux_amd64/include -L dep/raylib-$(RAYLIB_VERSION)_linux_amd64/lib/ -l:libraylib.a -lm
 
-bin/print3: src/main.c
+bin/print3: $(SRC)
 	mkdir -p bin
-	$(CC) $(CFLAGS) src/main.c -o bin/print3 $(RAYLIB_FLAGS)
+	$(CC) $(CFLAGS) $(SRC) -o bin/print3 $(RAYLIB_FLAGS)
 
 
 .PHONY: raylib

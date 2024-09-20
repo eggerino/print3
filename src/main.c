@@ -1,20 +1,15 @@
-#include "raylib.h"
+#include "scene.h"
+#include "viewer.h"
 
 int main(void) {
-    InitWindow(1600, 900, "print3");
+    Scene scene = {0};
+    scene_add_demo_object(&scene);
 
-    SetTargetFPS(60);
+    bool viewer_should_run = true;
+    ViewerOptions opt = {"print3", 1600, 900, WHITE};
+    viewer_run(&opt, &scene, &viewer_should_run);
 
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-
-        ClearBackground(WHITE);
-        DrawRectangle(200, 200, 1200, 500, BLUE);
-
-        EndDrawing();
-    }
-
-    CloseWindow();
+    scene_free_members(&scene);
 
     return 0;
 }
