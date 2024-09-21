@@ -7,8 +7,8 @@
 
 typedef struct ViewerOptions {
     const char *window_title;
-    int window_width;
-    int window_height;
+    int initial_window_width;
+    int initial_window_height;
     Color background;
     bool render_facets_both_sides;
 } ViewerOptions;
