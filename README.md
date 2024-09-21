@@ -2,7 +2,10 @@
 
 > Visualization Tool for 3D Models
 
-It supports a model description via STDIN.
+It supports the following file formats:
+- .stl (binary)
+
+It is also possible to describe a model via STDIN.
 
 # Build
 
@@ -22,4 +25,5 @@ Run `./bin/print3 --help` to get all available options.
 
 # Run examples
 
-- Stdin: `cat examples/stdin.txt | ./bin/print3 STDIN STDIN`
+- STDIN: `cat examples/stdin.txt | ./bin/print3 STDIN STDIN`
+- .stl (Binary): `./bin/print3 examples/bunny.stl`
