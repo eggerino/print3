@@ -14,6 +14,6 @@ typedef struct ViewerOptions {
     bool render_facets_both_sides;
 } ViewerOptions;
 
-void viewer_run(const ViewerOptions *opt, const Scene *scene, const bool *should_run);
+void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *should_run);
 
 #endif
