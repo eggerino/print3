@@ -1,5 +1,5 @@
 CC = gcc
-SRC = src/args.c src/main.c src/scene.c src/viewer.c
+SRC = src/args.c src/main.c src/scene.c src/viewer.c src/deserialize/stdin.c
 RAYLIB_VERSION = 5.0
 RAYLIB_FLAGS = -I dep/raylib-$(RAYLIB_VERSION)_linux_amd64/include -L dep/raylib-$(RAYLIB_VERSION)_linux_amd64/lib/ -l:libraylib.a -lm
 

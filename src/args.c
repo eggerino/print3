@@ -12,6 +12,7 @@ static void set_defaults(Args *args);
 static int parse_options(int argc, const char **argv, int start, Args *args);
 static void parse_inputs(int argc, const char **argv, int start, Args *args);
 static void define_window_title(Args *args);
+static void warn_on_unusual_args(const Args *args);
 static void usage(FILE *stream, const char *prog_name);
 
 void args_parse(int argc, const char **argv, Args *args) {
@@ -23,6 +24,8 @@ void args_parse(int argc, const char **argv, Args *args) {
     parse_inputs(argc, argv, iarg, args);
 
     define_window_title(args);
+
+    warn_on_unusual_args(args);
 }
 
 void args_free_member(Args *args) {
@@ -158,6 +161,13 @@ void define_window_title(Args *args) {
     title[n - 1] = '\0';
 
     args->viewer.window_title = title;
+}
+
+void warn_on_unusual_args(const Args *args) {
+    if ((args->stdin_object_count + args->files.length) == 0) {
+        fprintf(stderr, "[WARN] No input was specified. Only a empty scene will be visualized.\n");
+        fprintf(stderr, "       Consider specify a input file or \"STDIN\" to provide an object via stdin.\n");
+    }
 }
 
 void usage(FILE *stream, const char *prog_name) {

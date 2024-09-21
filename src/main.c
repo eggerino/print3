@@ -1,4 +1,5 @@
 #include "args.h"
+#include "deserialize/stdin.h"
 #include "scene.h"
 #include "viewer.h"
 
@@ -7,7 +8,10 @@ int main(int argc, const char **argv) {
     args_parse(argc, argv, &args);
 
     Scene scene = {0};
-    scene_add_demo_object(&scene);
+
+    for (size_t i = 0; i < args.stdin_object_count; ++i) {
+        stdin_add_to_scene(stdin, &scene);
+    }
 
     bool viewer_should_run = true;
     viewer_run(&args.viewer, &scene, &viewer_should_run);
