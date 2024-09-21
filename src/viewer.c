@@ -12,9 +12,19 @@
 #define PAN_SENEITIVITY 5e-3
 #define ZOOM_SENSITIVITY 0.3
 
+typedef struct ViewerContext {
+    bool display_hud;
+} ViewerContext;
+
 static void draw_scene_3D(const ViewerOptions *opt, const Scene *scene);
+
 static void reset_camera(Camera *camera);
 static void update_camera(Camera *camera);
+
+static void update_context(ViewerContext *context);
+
+static void draw_control_info(const ViewerOptions *opt, const ViewerContext *context);
+static void draw_fps(const ViewerContext *context);
 
 void viewer_run(const ViewerOptions *opt, const Scene *scene, const bool *should_run) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -23,11 +33,14 @@ void viewer_run(const ViewerOptions *opt, const Scene *scene, const bool *should
     Camera camera = {0};
     reset_camera(&camera);
 
+    ViewerContext context = {0};
+
     SetTargetFPS(TARGET_FPS);
 
     // Check for ending signal from cancelation token and GUI events
     while (*should_run && !WindowShouldClose()) {
         update_camera(&camera);
+        update_context(&context);
 
         BeginDrawing();
 
@@ -37,7 +50,8 @@ void viewer_run(const ViewerOptions *opt, const Scene *scene, const bool *should
         draw_scene_3D(opt, scene);
         EndMode3D();
 
-        // TODO: Render a toggleable 2D pane with controls
+        draw_control_info(opt, &context);
+        draw_fps(&context);
 
         // TODO: Render a 3D coordinate system in the corner
 
@@ -135,4 +149,47 @@ void update_camera(Camera *camera) {
     if (IsKeyDown(KEY_R)) {
         reset_camera(camera);
     }
+}
+
+void update_context(ViewerContext *context) {
+    // Toggle hub by pressing "H"
+    if (IsKeyPressed(KEY_H)) {
+        context->display_hud = !context->display_hud;
+    }
+}
+
+#define draw_control_entry(binding, description)                              \
+    do {                                                                      \
+        DrawRectangle(8, 8 + 16 * entry, 330, 16, colors[(entry + 1) % 2]);   \
+        DrawText((binding), 10, 10 + 16 * entry, 12, colors[entry % 2]);      \
+        DrawText((description), 250, 10 + 16 * entry, 12, colors[entry % 2]); \
+        ++entry;                                                              \
+    } while (0)
+
+void draw_control_info(const ViewerOptions *opt, const ViewerContext *context) {
+    Color colors[2] = {DARKGRAY, LIGHTGRAY};
+    size_t entry = 0;
+
+    if (!context->display_hud) {
+        // show a hint to tofggle hud for better ux
+        // This behaviour is controlable by the true no hud option
+        if (!opt->true_no_hud) {
+            // show a hint to on how to toggle hut
+            draw_control_entry("H", "Toggle HUD");
+        }
+        return;
+    }
+
+    draw_control_entry("H", "Toggle HUD");
+    draw_control_entry("R", "Reset camera");
+    draw_control_entry("Left Mouse Button + Mouse Drag", "Rotate");
+    draw_control_entry("Right Mouse Button + Mouse Drag", "Pan");
+    draw_control_entry("Mouse Wheel", "Zoom");
+}
+
+void draw_fps(const ViewerContext *context) {
+    if (!context->display_hud) return;
+
+    int scree_width = GetScreenWidth();
+    DrawFPS(scree_width - 100, 10);
 }
