@@ -3,8 +3,8 @@
 > Visualization Tool for 3D Models
 
 <p float="left">
-  <img alt="3D visualization of a bunny" src="/assets/bunny.png" height="400" />
-  <img alt="3D visualization of a bottle with hud" src="/assets/bottle_hud.png" height="400" />
+  <img alt="3D visualization of a bunny" src="/assets/bunny.png" height="300" />
+  <img alt="3D visualization of a bottle with hud" src="/assets/bottle_hud.png" height="300" />
 </p>
 
 It supports the following file formats:
