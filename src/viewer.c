@@ -25,6 +25,7 @@ typedef struct ViewerContext {
 // Scene
 static float get_scene_radius(const Scene *scene);
 static void draw_scene_3D(const ViewerContext *context, const Scene *scene);
+static void create_screenshot();
 
 // Viewer context
 static void update_context(ViewerContext *context);
@@ -86,6 +87,8 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
         draw_fps(&context);
 
         EndDrawing();
+
+        create_screenshot();
     }
 
     // De-initialize resources
@@ -147,6 +150,34 @@ void draw_scene_3D(const ViewerContext *context, const Scene *scene) {
                 }
             }
         }
+    }
+}
+
+void create_screenshot() {
+    // <CTRL> + "P" to amek a screenshot
+    bool is_any_ctrl_down = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+    if (is_any_ctrl_down && IsKeyPressed(KEY_P)) {
+        printf("[SCREENSHOT] Enter the filename for the screenshot (leave blank to cancel): ");
+
+        char filename[2048];
+        if (!fgets(filename, 2048, stdin)) {
+            fprintf(stderr, "[ERR] Could not read input. Screenshot creation is canceled.\n");
+            return;
+        }
+
+        // Place a null termination on first new line so filename will contain a string to the inputed line
+        int i = 0;
+        while (filename[i] != '\r' && filename[i] != '\n' && filename[i] != '\0') ++i;
+        filename[i] = '\0';
+
+        // Cancel on empty input
+        if (filename[0] == '\0') {
+            printf("[SCREENSHOT] Screenshot creation is canceled.\n");
+            return;
+        }
+
+        // Save screenshot to file
+        TakeScreenshot(filename);
     }
 }
 
@@ -243,7 +274,7 @@ void update_camera(const ViewerContext *context, Camera *camera) {
 
 #define draw_control_entry(binding, description)                              \
     do {                                                                      \
-        DrawRectangle(8, 8 + 16 * entry, 500, 16, colors[(entry + 1) % 2]);   \
+        DrawRectangle(8, 8 + 16 * entry, 520, 16, colors[(entry + 1) % 2]);   \
         DrawText((binding), 10, 10 + 16 * entry, 12, colors[entry % 2]);      \
         DrawText((description), 250, 10 + 16 * entry, 12, colors[entry % 2]); \
         ++entry;                                                              \
@@ -257,6 +288,7 @@ void draw_control_info(const ViewerContext *context) {
         draw_control_entry("H", "Toggle HUD");
         draw_control_entry("C", "Toggle coordinate system visualization");
         draw_control_entry("R", "Reset camera");
+        draw_control_entry("CTRL + P", "Create screenshot (Enter filename to stdin)");
         draw_control_entry("Left Mouse Button + Mouse Drag", "Rotate");
         draw_control_entry("Right Mouse Button + Mouse Drag", "Pan");
         draw_control_entry("Mouse Wheel", "Zoom");
