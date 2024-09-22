@@ -12,7 +12,7 @@
 #define COS_VIEW_HEIGHT 200
 
 #define ROTATION_SENSITIVITY 1e-3
-#define PAN_SENEITIVITY 9e-6
+#define PAN_SENEITIVITY 1.8
 #define ZOOM_SENSITIVITY 0.3
 
 typedef struct ViewerContext {
@@ -197,7 +197,7 @@ void update_camera(const ViewerContext *context, Camera *camera) {
         Vector3 right_unit = Vector3Normalize(Vector3CrossProduct(view, up_unit));
 
         // Get relative pan vectors
-        float pan_factor = PAN_SENEITIVITY * context->scene_radius * camera->fovy;
+        float pan_factor = PAN_SENEITIVITY * camera->fovy / GetScreenWidth();
         float up_distance = pan_factor * mouse_delta.y;
         Vector3 up_pan = Vector3Scale(up_unit, up_distance);
 
