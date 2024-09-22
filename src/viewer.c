@@ -120,16 +120,31 @@ void draw_scene_3D(const ViewerContext *context, const Scene *scene) {
         Object obj = scene->objects.items[i_obj];
 
         for (size_t i_sur = 0; i_sur + 2 < obj.surface.length; i_sur += 3) {
-            DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
-                           scene->vertices.items[obj.surface.items[i_sur + 1]],
-                           scene->vertices.items[obj.surface.items[i_sur + 2]], obj.color);
+            // Only draw the surface when it is visible
+            if (obj.color.a) {
+                DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
+                               scene->vertices.items[obj.surface.items[i_sur + 1]],
+                               scene->vertices.items[obj.surface.items[i_sur + 2]], obj.color);
+            }
 
-            if (context->options->render_facets_both_sides) {
+            // Only draw the opposite facing surfaces when desired and visible
+            if (context->options->render_facets_both_sides && obj.color.a) {
                 // Swap the second and third vertex to achieve different implicit normal vectors, which are used by raylib to
                 // determine if the surface is facing towards the camera
                 DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
                                scene->vertices.items[obj.surface.items[i_sur + 2]],
                                scene->vertices.items[obj.surface.items[i_sur + 1]], obj.color);
+            }
+
+            // Only draw edges when they are visible
+            if (context->options->edge_color.a) {
+                for (size_t i_edge = 0; i_edge < 3; ++i_edge) {
+                    size_t start_v_index = obj.surface.items[i_sur + i_edge];
+                    size_t end_v_index = obj.surface.items[i_sur + (i_edge + 1) % 3];
+
+                    DrawLine3D(scene->vertices.items[start_v_index], scene->vertices.items[end_v_index],
+                               context->options->edge_color);
+                }
             }
         }
     }

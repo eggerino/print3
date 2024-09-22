@@ -71,6 +71,7 @@ void set_defaults(Args *args) {
     args->viewer.true_no_hud = false;
     args->viewer.background = WHITE;
     args->viewer.render_facets_both_sides = false;
+    args->viewer.edge_color = (Color){0, 0, 0, 0};
 }
 
 int parse_options(int argc, const char **argv, int start, Args *args) {
@@ -96,6 +97,12 @@ int parse_options(int argc, const char **argv, int start, Args *args) {
 
         if (strcmp(argv[i], "-fc") == 0 || strcmp(argv[i], "--fallback-color") == 0) {
             args->fallback_color = parse_color(argc, argv, i + 1, 4);
+            i += 4;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-ec") == 0 || strcmp(argv[i], "--edge-color") == 0) {
+            args->viewer.edge_color = parse_color(argc, argv, i + 1, 4);
             i += 4;
             continue;
         }
@@ -186,51 +193,59 @@ Color parse_color(int argc, const char **argv, int offset, int channels) {
 }
 
 void usage(FILE *stream, const char *prog_name) {
-    fprintf(stream,
-            "[USAGE] %s [OPTION ...] [INPUT ...]]\n"
-            "\n"
-            "\n"
-            "- INPUT: \"STDIN\" | FILE\n"
-            "    Specify a file with a 3d model to visualize or provide the data via stdin.\n"
-            "    The same file can be specified multiple times and will be duplicately rendered.\n"
-            "    If \"STDIN\" is specified n times, n distinct objects need to be provided via stdin\n"
-            "    before rendering can take place.\n"
-            "\n"
-            "    The following file formats are supported:\n"
-            "    - stl (binary and ascii)\n"
-            "\n"
-            "    The data format for stdin is the following:\n"
-            "    - Provide the color of the surface in the first line\n"
-            "        {red: UINT8} {green: UINT8} {blue: UINT8} {alpha: UINT8}\n"
-            "    - For each sufrace provide three vertices with their x-, y-, z-coordiantes per line each as REAL32\n"
-            "        v1x v1y v1z v2x v2y v2z v3x v3y v3z\n"
-            "    - Terminate the specification with \"end\" or EoF (only feasable for the last object)\n"
-            "\n"
-            "\n"
-            "- OPTION:\n"
-            "    -h  | --help           Default: false\n"
-            "                           Format: Flag\n"
-            "                           Print help message.\n"
-            "\n"
-            "    -nh | --no-hud         Default: false\n"
-            "                           Format: Flag\n"
-            "                           When toggling the HUD the entire hud will be hidden.\n"
-            "                           Even the control hint for toggling the hud.\n"
-            "\n"
-            "    -b  | --both-sides     Default: false\n"
-            "                           Format: Flag\n"
-            "                           Each surface will be rendered twice but with opposite normal vectors.\n"
-            "                           So each surface is guaranteed to be visible by the camera.\n"
-            "                           With a proper 3D model this option should not be used.\n"
-            "\n"
-            "    -bg | --background     Default: 255 255 255 (white)\n"
-            "                           Format: {red: UINT8} {green: UINT8} {blue: UINT8}\n"
-            "                           Background color of the scene in the format.\n"
-            "\n"
-            "    -fc | --fallback-color Default: 0 121 241 255 (blue)\n"
-            "                           Format: {red: UINT8} {green: UINT8} {blue: UINT8} {alpha: UINT8}\n"
-            "                           Fallback color of objects. This is used, when there is no color information\n"
-            "                           available for an object.\n"
-            "\n",
-            prog_name);
+    fprintf(
+        stream,
+        "[USAGE] %s [OPTION ...] [INPUT ...]]\n"
+        "\n"
+        "\n"
+        "- INPUT: \"STDIN\" | FILE\n"
+        "    Specify a file with a 3d model to visualize or provide the data via stdin.\n"
+        "    The same file can be specified multiple times and will be duplicately rendered.\n"
+        "    If \"STDIN\" is specified n times, n distinct objects need to be provided via stdin\n"
+        "    before rendering can take place.\n"
+        "\n"
+        "    The following file formats are supported:\n"
+        "    - stl (binary and ascii)\n"
+        "\n"
+        "    The data format for stdin is the following:\n"
+        "    - Provide the color of the surface in the first line\n"
+        "        {red: UINT8} {green: UINT8} {blue: UINT8} {alpha: UINT8}\n"
+        "    - For each sufrace provide three vertices with their x-, y-, z-coordiantes per line each as REAL32\n"
+        "        v1x v1y v1z v2x v2y v2z v3x v3y v3z\n"
+        "    - Terminate the specification with \"end\" or EoF (only feasable for the last object)\n"
+        "\n"
+        "\n"
+        "- OPTION:\n"
+        "    -h  | --help           Default: false\n"
+        "                           Format: Flag\n"
+        "                           Print help message.\n"
+        "\n"
+        "    -nh | --no-hud         Default: false\n"
+        "                           Format: Flag\n"
+        "                           When toggling the HUD the entire hud will be hidden.\n"
+        "                           Even the control hint for toggling the hud.\n"
+        "\n"
+        "    -b  | --both-sides     Default: false\n"
+        "                           Format: Flag\n"
+        "                           Warning: setting this flag impact performance.\n"
+        "                           Each surface will be rendered twice but with opposite normal vectors.\n"
+        "                           So each surface is guaranteed to be visible by the camera.\n"
+        "                           With a proper 3D model this option should not be used.\n"
+        "\n"
+        "    -bg | --background     Default: 255 255 255 (white)\n"
+        "                           Format: {red: UINT8} {green: UINT8} {blue: UINT8}\n"
+        "                           Background color of the scene in the format.\n"
+        "\n"
+        "    -fc | --fallback-color Default: 0 121 241 255 (blue)\n"
+        "                           Format: {red: UINT8} {green: UINT8} {blue: UINT8} {alpha: UINT8}\n"
+        "                           Fallback color of objects. This is used, when there is no color information\n"
+        "                           available for an object.\n"
+        "\n"
+        "    -ec | --edge-color     Default: 0 0 0 0 (transparent)\n"
+        "                           Format: {red: UINT8} {green: UINT8} {blue: UINT8} {alpha: UINT8}\n"
+        "                           Warning: setting a non transparent (aka. alpha != 0) color will impact performance.\n"
+        "                           Edge color of every surface. When a non transparent color is set\n"
+        "                           the wireframe of the model is visible.\n"
+        "\n",
+        prog_name);
 }
