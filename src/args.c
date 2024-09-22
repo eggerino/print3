@@ -197,7 +197,7 @@ void usage(FILE *stream, const char *prog_name) {
             "    before rendering can take place.\n"
             "\n"
             "    The following file formats are supported:\n"
-            "    - stl (binary)\n"
+            "    - stl (binary and ascii)\n"
             "\n"
             "    The data format for stdin is the following:\n"
             "    - Provide the color of the surface in the first line\n"
