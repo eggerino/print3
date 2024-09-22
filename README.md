@@ -2,6 +2,8 @@
 
 > Visualization Tool for 3D Models
 
+![3D visualization of a bunny](/assets/bunny.png)
+
 It supports the following file formats:
 - .stl (binary and ascii)
 
@@ -9,6 +11,7 @@ It is also possible to describe a model via STDIN.
 
 Multiple objects from multiple sources can form a scene.
 The 3D viewer let's you rotate, zoom and pan the scene.
+Screenshots of the visualization of the scene can be generated.
 
 # Build
 
@@ -37,8 +40,8 @@ Run `./bin/print3 --help` to get all available options.
 The following features are planned to be added in the future:
 
 - Support for windows
-- Screenshot creation
 - File formats:
     - .off
     - .ply
     - .obj
+- Snapping view normal to any surface
