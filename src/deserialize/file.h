@@ -3,6 +3,6 @@
 
 #include "../scene.h"
 
-void file_add_to_scene(const char *filename, Scene *scene);
+void file_add_to_scene(const char *filename, Color fallback_color, Scene *scene);
 
 #endif

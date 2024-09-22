@@ -15,7 +15,7 @@ int main(int argc, const char **argv) {
     }
 
     for (size_t i = 0; i < args.files.length; ++i) {
-        file_add_to_scene(args.files.items[i], &scene);
+        file_add_to_scene(args.files.items[i], args.fallback_color, &scene);
     }
 
     bool viewer_should_run = true;

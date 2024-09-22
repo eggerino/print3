@@ -21,7 +21,7 @@ struct {
 
 static MemoryDeserializer get_deserializer(const char *filename);
 
-void file_add_to_scene(const char *filename, Scene *scene) {
+void file_add_to_scene(const char *filename, Color fallback_color, Scene *scene) {
     MemoryDeserializer deserializer = get_deserializer(filename);
 
     // Open the file
@@ -47,7 +47,7 @@ void file_add_to_scene(const char *filename, Scene *scene) {
     }
 
     // Dispatch the deserializer
-    deserializer(buffer, size, scene);
+    deserializer(buffer, size, fallback_color, scene);
 
     // Unmap the file
     if (munmap(buffer, size)) {
@@ -61,6 +61,8 @@ void file_add_to_scene(const char *filename, Scene *scene) {
 
 MemoryDeserializer get_deserializer(const char *filename) {
     const char *extension = strrchr(filename, '.');
+    extension = extension ? extension : filename;  // use filename as extension if no dot is found
+
     for (size_t i = 0; i < EXTENSION_MAP_COUNT; ++i) {
         if (strcmp(extension, extension_map[i].extension) == 0) {
             return extension_map[i].deserializer;

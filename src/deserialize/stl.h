@@ -3,6 +3,6 @@
 
 #include "../scene.h"
 
-void stl_deserialize(void *buffer, size_t size, Scene *scene);
+void stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
 
 #endif

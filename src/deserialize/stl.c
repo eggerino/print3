@@ -6,34 +6,34 @@
 
 #include "raymath.h"
 
-static void ascii_stl_deserialize(void *buffer, size_t size, Scene *scene);
+static void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
 
 // binary implementation
-static void bin_stl_deserialize(void *buffer, size_t size, Scene *scene);
+static void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
 static uint32_t bin_read_u32(uint8_t *ptr);
 static float bin_read_f32(uint8_t *ptr);
 
-void stl_deserialize(void *buffer, size_t size, Scene *scene) {
+void stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene) {
     // determine it is binary or ascii format
 
     // First 80 byte is the header in binary
     // Ascii starts with solid keyword and binary header is permitted to start with same bytes
     if (strncmp(buffer, "solid", 5) == 0) {
-        ascii_stl_deserialize(buffer, size, scene);
+        ascii_stl_deserialize(buffer, size, fallback_color, scene);
     } else {
-        bin_stl_deserialize(buffer, size, scene);
+        bin_stl_deserialize(buffer, size, fallback_color, scene);
     }
 }
 
 #include <assert.h>
 
-void ascii_stl_deserialize(void *buffer, size_t size, Scene *scene) { assert("TODO"); }
+void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene) { assert("TODO"); }
 
 // ****************************************************************************
 // binary implementation
 // ****************************************************************************
 
-void bin_stl_deserialize(void *buffer, size_t size, Scene *scene) {
+void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene) {
     uint8_t *ptr = buffer;
 
     // Skip header
@@ -53,7 +53,7 @@ void bin_stl_deserialize(void *buffer, size_t size, Scene *scene) {
 
     // Create a new object
     Object obj = {0};
-    obj.color = BLUE;
+    obj.color = fallback_color;  // Use fallback color since stl does not support colors
 
     // add all facets to the the new object
     float coords[12];

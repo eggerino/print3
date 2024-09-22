@@ -14,6 +14,7 @@ typedef struct Files {
 typedef struct Args {
     int stdin_object_count;
     Files files;
+    Color fallback_color;
     ViewerOptions viewer;
 } Args;
 
