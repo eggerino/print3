@@ -2,7 +2,10 @@
 
 > Visualization Tool for 3D Models
 
-![3D visualization of a bunny](/assets/bunny.png)
+<p float="left">
+  <img alt="3D visualization of a bunny" src="/assets/bunny.png" height="500" />
+  <img alt="3D visualization of a bottle with hud" src="/assets/bottle_hud.png" height="500" />
+</p>
 
 It supports the following file formats:
 - .stl (binary and ascii)
