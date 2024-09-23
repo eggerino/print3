@@ -55,7 +55,6 @@ void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scen
 
     // Create a new object
     Object obj = {0};
-    obj.color = fallback_color;  // Use fallback color since stl does not support colors
 
     // Skip the beginning of the solid block
     skip_or_err("solid", "[ERR] Invalid format. No start of a solid block found.\n");
@@ -85,6 +84,9 @@ void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scen
             da_add(scene->vertices, v[i]);
             da_add(obj.surface, scene->vertices.length - 1);
         }
+
+        // Use fallback color for each facet
+        da_add(obj.colors, fallback_color);
     }
 
     // Add the created object to the scene
@@ -141,7 +143,6 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
 
     // Create a new object
     Object obj = {0};
-    obj.color = fallback_color;  // Use fallback color since stl does not support colors
 
     // add all facets to the the new object
     float coords[12];
@@ -166,6 +167,7 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
         size_t v1_index = scene->vertices.length;
         da_add3(scene->vertices, v1, v2, v3);
         da_add3(obj.surface, v1_index, v1_index + 1, v1_index + 2);
+        da_add(obj.colors, fallback_color);
     }
 
     // Add the created object to the scene

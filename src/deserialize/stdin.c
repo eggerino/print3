@@ -19,7 +19,7 @@ void stdin_add_to_scene(FILE *stream, Scene *scene) {
         fprintf(stderr, "Could not read color line.\n");
         exit(1);
     }
-    object.color = read_color(buffer, NULL);
+    Color color = read_color(buffer, NULL);
 
     // Read vertices until the "end" is given or the stream ends
     while (fgets(buffer, BUFFER_SIZE, stream)) {
@@ -35,6 +35,7 @@ void stdin_add_to_scene(FILE *stream, Scene *scene) {
             da_add(scene->vertices, vec);
             da_add(object.surface, scene->vertices.length - 1);
         }
+        da_add(object.colors, color);
     }
 
     da_add(scene->objects, object);

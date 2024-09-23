@@ -122,21 +122,24 @@ void draw_scene_3D(const ViewerContext *context, const Scene *scene) {
     for (size_t i_obj = 0; i_obj < scene->objects.length; ++i_obj) {
         Object obj = scene->objects.items[i_obj];
 
-        for (size_t i_sur = 0; i_sur + 2 < obj.surface.length; i_sur += 3) {
+        for (size_t i_facet = 0; i_facet < obj.colors.length; ++i_facet) {
+            Color facet_color = obj.colors.items[i_facet];
+            size_t i_sur = i_facet * 3;
+
             // Only draw the surface when it is visible
-            if (obj.color.a) {
+            if (facet_color.a) {
                 DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
                                scene->vertices.items[obj.surface.items[i_sur + 1]],
-                               scene->vertices.items[obj.surface.items[i_sur + 2]], obj.color);
+                               scene->vertices.items[obj.surface.items[i_sur + 2]], facet_color);
             }
 
             // Only draw the opposite facing surfaces when desired and visible
-            if (context->options->render_facets_both_sides && obj.color.a) {
+            if (context->options->render_facets_both_sides && facet_color.a) {
                 // Swap the second and third vertex to achieve different implicit normal vectors, which are used by raylib to
                 // determine if the surface is facing towards the camera
                 DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
                                scene->vertices.items[obj.surface.items[i_sur + 2]],
-                               scene->vertices.items[obj.surface.items[i_sur + 1]], obj.color);
+                               scene->vertices.items[obj.surface.items[i_sur + 1]], facet_color);
             }
 
             // Only draw edges when they are visible

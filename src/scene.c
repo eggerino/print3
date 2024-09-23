@@ -5,6 +5,7 @@ void scene_free_members(Scene *scene) {
 
     for (size_t i = 0; i < scene->objects.length; ++i) {
         free(scene->objects.items[i].surface.items);
+        free(scene->objects.items[i].colors.items);
     }
     free(scene->objects.items);
 }
@@ -20,12 +21,16 @@ void scene_add_demo_object(Scene *scene) {
     size_t tip = scene->vertices.length - 1;
 
     Object obj = {0};
-    obj.color = BLUE;
 
     da_add3(obj.surface, tip - 4, tip - 3, tip);
     da_add3(obj.surface, tip - 3, tip - 2, tip);
     da_add3(obj.surface, tip - 2, tip - 1, tip);
     da_add3(obj.surface, tip - 1, tip - 4, tip);
+
+    da_add(obj.colors, RED);
+    da_add(obj.colors, GREEN);
+    da_add(obj.colors, BLUE);
+    da_add(obj.colors, YELLOW);
 
     da_add(scene->objects, obj);
 }

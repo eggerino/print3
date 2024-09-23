@@ -20,9 +20,15 @@ typedef struct VertexIndices {
     size_t capacity;
 } VertexIndices;
 
+typedef struct Colors {
+    Color *items;
+    size_t length;
+    size_t capacity;
+} Colors;
+
 typedef struct Object {
     VertexIndices surface;
-    Color color;
+    Colors colors;
 } Object;
 
 typedef struct Objects {
