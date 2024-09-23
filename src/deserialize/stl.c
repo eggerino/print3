@@ -5,16 +5,14 @@
 #include <string.h>
 
 #include "raymath.h"
+#include "util.h"
 
 // scii implementation
 static void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
-static void ascii_str_skip(const char *str, char *ptr, char **end);
 static void ascii_str_to_vector3(char *ptr, char **end, Vector3 *vector);
 
 // binary implementation
 static void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
-static uint32_t bin_read_u32(uint8_t *ptr);
-static float bin_read_f32(uint8_t *ptr);
 
 // common
 static void order_vertices(const Vector3 *normal, Vector3 *v1, Vector3 *v2, Vector3 *v3);
@@ -31,14 +29,14 @@ void stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *sce
     }
 }
 
-#define skip_or_err(str, msg)            \
-    do {                                 \
-        ascii_str_skip(str, ptr, &peak); \
-        if (peak == ptr) {               \
-            fprintf(stderr, msg);        \
-            exit(1);                     \
-        }                                \
-        ptr = peak;                      \
+#define skip_or_err(str, msg)      \
+    do {                           \
+        peak = str_skip(ptr, str); \
+        if (!peak) {               \
+            fprintf(stderr, msg);  \
+            exit(1);               \
+        }                          \
+        ptr = peak;                \
     } while (0)
 
 #define vec_or_err(vec_ptr, msg)                   \
@@ -65,8 +63,8 @@ void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scen
 
     while (1) {
         // Stop when no mor facet is defined
-        ascii_str_skip("facet normal ", ptr, &peak);
-        if (ptr == peak) break;
+        peak = str_skip(ptr, "facet normal ");
+        if (!peak) break;
         ptr = peak;
 
         // Parse out the normal vector
@@ -91,19 +89,6 @@ void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scen
 
     // Add the created object to the scene
     da_add(scene->objects, obj);
-}
-
-void ascii_str_skip(const char *str, char *ptr, char **end) {
-    *end = ptr;
-
-    size_t n = strlen(str);
-
-    for (; *ptr; ++ptr) {
-        if (strncmp(ptr, str, n) == 0) {  // str is found
-            *end = ptr + n;               // Skip str
-            return;
-        }
-    }
 }
 
 void ascii_str_to_vector3(char *ptr, char **end, Vector3 *vector) {
@@ -143,7 +128,7 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
     ptr = &ptr[80];
 
     // Read number of facets
-    uint32_t facet_count = bin_read_u32(ptr);
+    uint32_t facet_count = binary_buffer_to_u32(ptr, ORDERING_LITTLE_ENDIAN);
     ptr += 4;
 
     // Check if file size matches the computed size
@@ -163,7 +148,7 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
     for (size_t i_facet = 0; i_facet < facet_count; ++i_facet) {
         // Read all coordinates for the facet
         for (size_t i_coord = 0; i_coord < 12; ++i_coord) {
-            coords[i_coord] = bin_read_f32(ptr);
+            coords[i_coord] = binary_buffer_to_f32_IEEE754(ptr, ORDERING_LITTLE_ENDIAN);
             ptr += 4;
         }
 
@@ -185,17 +170,6 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
 
     // Add the created object to the scene
     da_add(scene->objects, obj);
-}
-
-uint32_t bin_read_u32(uint8_t *ptr) {
-    // little endian
-    return ptr[3] << 24 | ptr[2] << 16 | ptr[1] << 8 | ptr[0];
-}
-
-float bin_read_f32(uint8_t *ptr) {
-    // This only works if c compiler uses IEEE 754
-    uint32_t as_u32 = bin_read_u32(ptr);
-    return *((float *)&as_u32);
 }
 
 // ****************************************************************************
