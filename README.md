@@ -65,7 +65,6 @@ $ ./bin/print3 examples/bottle.stl # print an ascii stl model
 
 > [!NOTE]
 > Following features are planned to be added in the future:
-> * Rotate camera to face a selected surface orthogonally
 > * Support for windows
 > * Deserialzation for different formats:
 >     * .off

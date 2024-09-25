@@ -16,11 +16,19 @@
 #define PAN_SENEITIVITY 1.8
 #define ZOOM_SENSITIVITY 0.3
 
+typedef struct SurfaceSelection {
+    bool active;
+    Vector3 point;
+    Vector3 normal;
+    Vector3 vertices[3];
+} SurfaceSelection;
+
 typedef struct ViewerContext {
     const ViewerOptions *options;
     float scene_radius;
     bool display_hud;
     bool display_cos;
+    SurfaceSelection surface_selection;
 } ViewerContext;
 
 // Scene
@@ -28,10 +36,12 @@ static float get_scene_radius(const Scene *scene);
 static void set_empty_mesh_with_scene(const Scene *scene, Mesh *mesh);
 static void invert_normals_mesh(Mesh *mesh);
 static void set_mesh_color(Color color, Mesh *mesh);
+static void draw_surface_selection(const ViewerContext *context);
 static void create_screenshot();
 
 // Viewer context
-static void update_context(ViewerContext *context);
+static void update_context(const Scene *scene, const Camera *camera, ViewerContext *context);
+static void set_surface_selection(const Scene *scene, const Camera *camera, SurfaceSelection *surface_selection);
 
 // Camera control
 static void reset_camera(const ViewerContext *context, Camera *camera);
@@ -87,8 +97,8 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
     // Check for ending signal from cancelation token and GUI events
     while (*should_run && !WindowShouldClose()) {
         // Update the state of the viewer
+        update_context(scene, &camera, &context);
         update_camera(&context, &camera);
-        update_context(&context);
 
         render_cos_view(&context, &camera, &cos_view);
 
@@ -97,10 +107,10 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
         ClearBackground(options->background);
 
         BeginMode3D(camera);
-
         DrawModel(model, (Vector3){0, 0, 0}, 1, WHITE);
         if (options->render_facets_both_sides) DrawModel(inverted_model, (Vector3){0, 0, 0}, 1, WHITE);
         if (options->edge_color.a) DrawModelWires(wireframe_model, (Vector3){0, 0, 0}, 1, WHITE);
+        draw_surface_selection(&context);
         EndMode3D();
 
         draw_rendered_cos_view(&context, &cos_view);
@@ -197,6 +207,20 @@ void set_mesh_color(Color color, Mesh *mesh) {
     }
 }
 
+void draw_surface_selection(const ViewerContext *context) {
+    if (!context->surface_selection.active) return;
+
+    // Surface
+    DrawTriangle3D(context->surface_selection.vertices[0], context->surface_selection.vertices[1],
+                   context->surface_selection.vertices[2], RED);
+    DrawTriangle3D(context->surface_selection.vertices[0], context->surface_selection.vertices[2],
+                   context->surface_selection.vertices[1], RED);
+
+    Vector3 rel = Vector3Scale(context->surface_selection.normal, context->scene_radius);
+    Vector3 end = Vector3Add(context->surface_selection.point, rel);
+    DrawLine3D(context->surface_selection.point, end, RED);
+}
+
 void create_screenshot() {
     // <CTRL> + "P" to amek a screenshot
     bool is_any_ctrl_down = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
@@ -229,7 +253,7 @@ void create_screenshot() {
 // Viewer context
 // ****************************************************************************
 
-void update_context(ViewerContext *context) {
+void update_context(const Scene *scene, const Camera *camera, ViewerContext *context) {
     // Toggle hub by pressing "H"
     if (IsKeyPressed(KEY_H)) {
         context->display_hud = !context->display_hud;
@@ -238,6 +262,43 @@ void update_context(ViewerContext *context) {
     // Toggle coordinate system visualization by pressing "C"
     if (IsKeyPressed(KEY_C)) {
         context->display_cos = !context->display_cos;
+    }
+
+    // Select normal by pressing "S"
+    if (IsKeyPressed(KEY_S)) {
+        set_surface_selection(scene, camera, &context->surface_selection);
+    }
+}
+
+void set_surface_selection(const Scene *scene, const Camera *camera, SurfaceSelection *surface_selection) {
+    *surface_selection = (SurfaceSelection){0};  // Reset selection
+
+    Vector2 pos = GetMousePosition();
+    Ray ray = GetMouseRay(pos, *camera);
+
+    RayCollision nearest_collision = {0};
+    for (size_t i_obj = 0; i_obj < scene->objects.length; ++i_obj) {
+        Object obj = scene->objects.items[i_obj];
+
+        for (size_t i_ver = 0; i_ver < obj.vertices.length; i_ver += 9) {
+            Vector3 v1 = {obj.vertices.items[i_ver], obj.vertices.items[i_ver + 1], obj.vertices.items[i_ver + 2]};
+            Vector3 v2 = {obj.vertices.items[i_ver + 3], obj.vertices.items[i_ver + 4], obj.vertices.items[i_ver + 5]};
+            Vector3 v3 = {obj.vertices.items[i_ver + 6], obj.vertices.items[i_ver + 7], obj.vertices.items[i_ver + 8]};
+
+            RayCollision collision = GetRayCollisionTriangle(ray, v1, v2, v3);
+
+            if (!collision.hit) continue;
+
+            if (!nearest_collision.hit || collision.distance < nearest_collision.distance) {
+                nearest_collision = collision;
+                surface_selection->active = true;
+                surface_selection->point = collision.point;
+                surface_selection->normal = collision.normal;
+                surface_selection->vertices[0] = v1;
+                surface_selection->vertices[1] = v2;
+                surface_selection->vertices[2] = v3;
+            }
+        }
     }
 }
 
@@ -307,8 +368,38 @@ void update_camera(const ViewerContext *context, Camera *camera) {
     camera->fovy *= zoom_factor;
 
     // Reset camera via pressing "R"
-    if (IsKeyDown(KEY_R)) {
+    if (IsKeyPressed(KEY_R)) {
         reset_camera(context, camera);
+    }
+
+    // Rotate normal to selected surface  via "N"
+    if (context->surface_selection.active && IsKeyPressed(KEY_N)) {
+        Vector3 up = camera->up;
+        Vector3 normal = context->surface_selection.normal;
+
+        // Ensure up and normal are not parallel and adjust up if so
+        Vector3 right = Vector3CrossProduct(up, normal);
+        if (Vector3LengthSqr(right) < EPSILON) {
+            // First fallback is unit z
+            up = (Vector3){0, 0, 1};
+            right = Vector3CrossProduct(up, normal);
+            if (Vector3LengthSqr(right) < EPSILON) {
+                // If up and normal is +/- unitz use unit x
+                up = (Vector3){1, 0, 0};
+                right = Vector3CrossProduct(up, normal);
+            }
+        }
+
+        // ensure up is normalized and orthogonal to normal
+        right = Vector3Normalize(right);  // Normalize the vector to increase numeric accuracy
+        up = Vector3CrossProduct(normal, right);
+        up = Vector3Normalize(up);
+
+        Vector3 relative = Vector3Scale(normal, 1.5 * context->scene_radius);
+
+        camera->up = up;
+        camera->target = context->surface_selection.point;
+        camera->position = Vector3Add(camera->target, relative);
     }
 }
 
@@ -331,6 +422,8 @@ void draw_control_info(const ViewerContext *context) {
     if (context->display_hud) {
         draw_control_entry("H", "Toggle HUD");
         draw_control_entry("C", "Toggle coordinate system visualization");
+        draw_control_entry("S", "Select surface");
+        draw_control_entry("N", "Move camera normal to the select surface");
         draw_control_entry("R", "Reset camera");
         draw_control_entry("CTRL + P", "Create screenshot (Enter filename to stdin)");
         draw_control_entry("Left Mouse Button + Mouse Drag", "Rotate");
