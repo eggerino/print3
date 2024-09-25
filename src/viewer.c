@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -24,7 +25,9 @@ typedef struct ViewerContext {
 
 // Scene
 static float get_scene_radius(const Scene *scene);
-static void draw_scene_3D(const ViewerContext *context, const Scene *scene);
+static void set_empty_mesh_with_scene(const Scene *scene, Mesh *mesh);
+static void invert_normals_mesh(Mesh *mesh);
+static void set_mesh_color(Color color, Mesh *mesh);
 static void create_screenshot();
 
 // Viewer context
@@ -56,6 +59,22 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(options->initial_window_width, options->initial_window_height, options->window_title);
 
+    // Create all models of the scene
+    Mesh mesh = {0};
+    Mesh inverted_mesh = {0};
+    Mesh wireframe_mesh = {0};
+    set_empty_mesh_with_scene(scene, &mesh);
+    set_empty_mesh_with_scene(scene, &inverted_mesh);
+    invert_normals_mesh(&inverted_mesh);
+    set_empty_mesh_with_scene(scene, &wireframe_mesh);
+    set_mesh_color(options->edge_color, &wireframe_mesh);
+    UploadMesh(&mesh, false);
+    UploadMesh(&inverted_mesh, false);
+    UploadMesh(&wireframe_mesh, false);
+    Model model = LoadModelFromMesh(mesh);
+    Model inverted_model = LoadModelFromMesh(inverted_mesh);
+    Model wireframe_model = LoadModelFromMesh(wireframe_mesh);
+
     // Create a render texture for the coordinate system view
     RenderTexture cos_view = LoadRenderTexture(COS_VIEW_WIDTH, COS_VIEW_HEIGHT);
 
@@ -78,7 +97,10 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
         ClearBackground(options->background);
 
         BeginMode3D(camera);
-        draw_scene_3D(&context, scene);
+
+        DrawModel(model, (Vector3){0, 0, 0}, 1, WHITE);
+        if (options->render_facets_both_sides) DrawModel(inverted_model, (Vector3){0, 0, 0}, 1, WHITE);
+        if (options->edge_color.a) DrawModelWires(wireframe_model, (Vector3){0, 0, 0}, 1, WHITE);
         EndMode3D();
 
         draw_rendered_cos_view(&context, &cos_view);
@@ -93,6 +115,9 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
 
     // De-initialize resources
     UnloadRenderTexture(cos_view);
+    UnloadModel(wireframe_model);
+    UnloadModel(inverted_model);
+    UnloadModel(model);
     CloseWindow();
 }
 
@@ -107,52 +132,68 @@ float get_scene_radius(const Scene *scene) {
     // Scene radius is only used to prevent clipping through objects for zooming the fov can be modified
     float max_length_sqr = 0.0f;
 
-    for (size_t i = 0; i < scene->vertices.length; ++i) {
-        float length_sqr = Vector3LengthSqr(scene->vertices.items[i]);
+    for (size_t i_obj = 0; i_obj < scene->objects.length; ++i_obj) {
+        Object obj = scene->objects.items[i_obj];
 
-        if (length_sqr > max_length_sqr) {
-            max_length_sqr = length_sqr;
+        for (size_t i_ver = 0; i_ver < obj.vertices.length; i_ver += 3) {
+            Vector3 v = {obj.vertices.items[i_ver], obj.vertices.items[i_ver + 1], obj.vertices.items[i_ver + 2]};
+            float length_sqr = Vector3LengthSqr(v);
+
+            if (length_sqr > max_length_sqr) {
+                max_length_sqr = length_sqr;
+            }
         }
     }
 
     return 1.0f + sqrtf(max_length_sqr);
 }
 
-void draw_scene_3D(const ViewerContext *context, const Scene *scene) {
-    for (size_t i_obj = 0; i_obj < scene->objects.length; ++i_obj) {
-        Object obj = scene->objects.items[i_obj];
+void set_empty_mesh_with_scene(const Scene *scene, Mesh *mesh) {
+    size_t vertex_count = 0;
+    for (size_t i = 0; i < scene->objects.length; ++i) {
+        size_t obj_vertex_count = scene->objects.items[i].vertices.length / 3;
 
-        for (size_t i_facet = 0; i_facet < obj.colors.length; ++i_facet) {
-            Color facet_color = obj.colors.items[i_facet];
-            size_t i_sur = i_facet * 3;
+        assert(obj_vertex_count * 4 == scene->objects.items[i].colors.length &&
+               "Dimension mismatch between colors and vertices");
 
-            // Only draw the surface when it is visible
-            if (facet_color.a) {
-                DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
-                               scene->vertices.items[obj.surface.items[i_sur + 1]],
-                               scene->vertices.items[obj.surface.items[i_sur + 2]], facet_color);
-            }
+        vertex_count += obj_vertex_count;
+    }
 
-            // Only draw the opposite facing surfaces when desired and visible
-            if (context->options->render_facets_both_sides && facet_color.a) {
-                // Swap the second and third vertex to achieve different implicit normal vectors, which are used by raylib to
-                // determine if the surface is facing towards the camera
-                DrawTriangle3D(scene->vertices.items[obj.surface.items[i_sur]],
-                               scene->vertices.items[obj.surface.items[i_sur + 2]],
-                               scene->vertices.items[obj.surface.items[i_sur + 1]], facet_color);
-            }
+    mesh->triangleCount = vertex_count / 3;
+    mesh->vertexCount = vertex_count;
 
-            // Only draw edges when they are visible
-            if (context->options->edge_color.a) {
-                for (size_t i_edge = 0; i_edge < 3; ++i_edge) {
-                    size_t start_v_index = obj.surface.items[i_sur + i_edge];
-                    size_t end_v_index = obj.surface.items[i_sur + (i_edge + 1) % 3];
+    mesh->vertices = (float *)MemAlloc(vertex_count * 3 * sizeof(float));
+    mesh->colors = (unsigned char *)MemAlloc(vertex_count * 4 * sizeof(unsigned));
 
-                    DrawLine3D(scene->vertices.items[start_v_index], scene->vertices.items[end_v_index],
-                               context->options->edge_color);
-                }
-            }
+    size_t vertex_offset = 0;
+    for (size_t i = 0; i < scene->objects.length; ++i) {
+        size_t obj_vertex_count = scene->objects.items[i].vertices.length / 3;
+
+        memcpy(&mesh->vertices[3 * vertex_offset], scene->objects.items[i].vertices.items,
+               obj_vertex_count * 3 * sizeof(float));
+        memcpy(&mesh->colors[4 * vertex_offset], scene->objects.items[i].colors.items,
+               obj_vertex_count * 4 * sizeof(unsigned char));
+
+        vertex_offset += obj_vertex_count;
+    }
+}
+
+void invert_normals_mesh(Mesh *mesh) {
+    for (size_t i = 0; i < mesh->vertexCount * 3; i += 9) {
+        for (size_t i_comp = 0; i_comp < 3; ++i_comp) {
+            float temp = mesh->vertices[i + 3 + i_comp];
+            mesh->vertices[i + 3 + i_comp] = mesh->vertices[i + 6 + i_comp];
+            mesh->vertices[i + 6 + i_comp] = temp;
         }
+    }
+}
+
+void set_mesh_color(Color color, Mesh *mesh) {
+    for (size_t i = 0; i < mesh->vertexCount * 4; i += 4) {
+        mesh->colors[i] = color.r;
+        mesh->colors[i + 1] = color.g;
+        mesh->colors[i + 2] = color.b;
+        mesh->colors[i + 3] = color.a;
     }
 }
 

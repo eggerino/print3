@@ -81,12 +81,9 @@ void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scen
 
         // Add the vertices to the scene and the facet to the object
         for (int i = 0; i < 3; ++i) {
-            da_add(scene->vertices, v[i]);
-            da_add(obj.surface, scene->vertices.length - 1);
+            da_add_vector3(obj.vertices, v[i]);
+            da_add_color(obj.colors, fallback_color);
         }
-
-        // Use fallback color for each facet
-        da_add(obj.colors, fallback_color);
     }
 
     // Add the created object to the scene
@@ -164,10 +161,13 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
 
         order_vertices(&normal, &v1, &v2, &v3);
 
-        size_t v1_index = scene->vertices.length;
-        da_add3(scene->vertices, v1, v2, v3);
-        da_add3(obj.surface, v1_index, v1_index + 1, v1_index + 2);
-        da_add(obj.colors, fallback_color);
+        da_add_vector3(obj.vertices, v1);
+        da_add_vector3(obj.vertices, v2);
+        da_add_vector3(obj.vertices, v3);
+
+        da_add_color(obj.colors, fallback_color);
+        da_add_color(obj.colors, fallback_color);
+        da_add_color(obj.colors, fallback_color);
     }
 
     // Add the created object to the scene

@@ -32,10 +32,9 @@ void stdin_add_to_scene(FILE *stream, Scene *scene) {
         for (int i = 0; i < 3; ++i) {
             Vector3 vec = read_vector3(current, &peak);
             current = peak;
-            da_add(scene->vertices, vec);
-            da_add(object.surface, scene->vertices.length - 1);
+            da_add_vector3(object.vertices, vec);
+            da_add_color(object.colors, color);
         }
-        da_add(object.colors, color);
     }
 
     da_add(scene->objects, object);

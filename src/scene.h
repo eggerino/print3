@@ -8,26 +8,23 @@
 #include "dsa.h"
 #include "raylib.h"
 
+#define da_add_vector3(da, vec) da_add3(da, (vec).x, (vec).y, (vec).z)
+#define da_add_color(da, color) da_add4(da, (color).r, (color).g, (color).b, (color).a)
+
 typedef struct Vertices {
-    Vector3 *items;
+    float *items;  // 3 per vertex X Y Z
     size_t length;
     size_t capacity;
 } Vertices;
 
-typedef struct VertexIndices {
-    size_t *items;
-    size_t length;
-    size_t capacity;
-} VertexIndices;
-
 typedef struct Colors {
-    Color *items;
+    unsigned char *items;  // 4 per color R G B A
     size_t length;
     size_t capacity;
 } Colors;
 
 typedef struct Object {
-    VertexIndices surface;
+    Vertices vertices;
     Colors colors;
 } Object;
 
@@ -38,7 +35,6 @@ typedef struct Objects {
 } Objects;
 
 typedef struct Scene {
-    Vertices vertices;
     Objects objects;
 } Scene;
 
