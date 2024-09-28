@@ -14,9 +14,6 @@ static void ascii_str_to_vector3(char *ptr, char **end, Vector3 *vector);
 // binary implementation
 static void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
 
-// common
-static void order_vertices(const Vector3 *normal, Vector3 *v1, Vector3 *v2, Vector3 *v3);
-
 void stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene) {
     // determine it is binary or ascii format
 
@@ -172,24 +169,4 @@ void bin_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene 
 
     // Add the created object to the scene
     da_add(scene->objects, obj);
-}
-
-// ****************************************************************************
-// common
-// ****************************************************************************
-
-void order_vertices(const Vector3 *normal, Vector3 *v1, Vector3 *v2, Vector3 *v3) {
-    // Check if v1, v2, v3 is counter clockwise when looking from the normal direction
-    // (view isalong the negative normal vector)
-    Vector3 v21 = Vector3Subtract(*v2, *v1);
-    Vector3 v31 = Vector3Subtract(*v3, *v1);
-    Vector3 internal_normal = Vector3CrossProduct(v21, v31);
-
-    // dot product is positive if both normal vectors point to same direction
-    if (Vector3DotProduct(*normal, internal_normal) < 0) {
-        // Swap v2 and v3
-        Vector3 temp = *v2;
-        *v2 = *v3;
-        *v3 = temp;
-    }
 }

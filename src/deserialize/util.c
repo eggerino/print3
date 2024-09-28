@@ -1,7 +1,10 @@
 #include "util.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <string.h>
+
+#include "raymath.h"
 
 uint32_t binary_buffer_to_u32(const uint8_t *buffer, ByteOrdering ordering) {
     static_assert(ByteOrdering_COUNT == 2);
@@ -26,4 +29,29 @@ char *str_skip(char *str, const char *skip) {
 
     // Only add n (after skip string) if it was found
     return at_skip ? at_skip + n : NULL;
+}
+
+char *str_skip_whitespace(char *str) {
+    // proceed in the string until it is at the end or the first non whitespace is found
+    while (*str != '\0' && isspace(*str)) ++str;
+
+    return str;
+}
+
+bool order_vertices(const Vector3 *normal, Vector3 *v1, Vector3 *v2, Vector3 *v3) {
+    // Check if v1, v2, v3 is counter clockwise when looking from the normal direction
+    // (view isalong the negative normal vector)
+    Vector3 v21 = Vector3Subtract(*v2, *v1);
+    Vector3 v31 = Vector3Subtract(*v3, *v1);
+    Vector3 internal_normal = Vector3CrossProduct(v21, v31);
+
+    // dot product is positive if both normal vectors point to same direction
+    if (Vector3DotProduct(*normal, internal_normal) < 0) {
+        // Swap v2 and v3
+        Vector3 temp = *v2;
+        *v2 = *v3;
+        *v3 = temp;
+        return true;
+    }
+    return false;
 }

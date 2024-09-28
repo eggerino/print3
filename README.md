@@ -67,6 +67,5 @@ $ ./bin/print3 examples/bottle.stl # print an ascii stl model
 > Following features are planned to be added in the future:
 > * Support for windows
 > * Deserialzation for different formats:
->     * .off
 >     * .ply
 >     * .obj

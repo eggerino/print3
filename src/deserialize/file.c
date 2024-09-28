@@ -4,16 +4,21 @@
 #include <string.h>
 
 #include "memory.h"
+#include "off.h"
 #include "stl.h"
 
-#define EXTENSION_MAP_COUNT 1
+#define EXTENSION_MAP_COUNT 5
 
 // Use array of key value pair and scan linearly for the entry
 // With many deserializers consider implementing a hash table
 struct {
     const char *extension;
     MemoryDeserializer deserializer;
-} extension_map[EXTENSION_MAP_COUNT] = {{".stl", stl_deserialize}};
+} extension_map[EXTENSION_MAP_COUNT] = {
+    {".stl", stl_deserialize},  {".off", off_deserialize},   {".coff", off_deserialize},
+    {".noff", off_deserialize}, {".cnoff", off_deserialize},
+
+};
 
 static MemoryDeserializer get_deserializer(const char *filename);
 
