@@ -77,6 +77,5 @@ $ print3 examples/cow.obj # print an obj model
 
 > [!NOTE]
 > Following features are planned to be added in the future:
-> * Test support for windows
 > * Deserialzation for different formats:
 >     * .ply
