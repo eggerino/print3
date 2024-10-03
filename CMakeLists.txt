@@ -14,13 +14,12 @@ add_executable(${PROJECT_NAME}
     "src/viewer.c"
 )
 
-target_link_libraries(${PROJECT_NAME} m)
-
-if (WIN32)
-    set(RAYLIB_STATIC raylib.lib)
-else()
-    set(RAYLIB_STATIC libraylib.a)
-endif()
 target_include_directories(${PROJECT_NAME} PRIVATE "dep/raylib/include")
 target_link_directories(${PROJECT_NAME} PRIVATE "dep/raylib/lib")
-target_link_libraries(${PROJECT_NAME} ${RAYLIB_STATIC})
+
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} raylib.dll)
+else()
+    target_link_libraries(${PROJECT_NAME} m)
+    target_link_libraries(${PROJECT_NAME} libraylib.a)
+endif()

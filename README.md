@@ -19,19 +19,15 @@ print3 supports the following formats:
 
 # Build
 
-To build print3 first fetch the dependencies.
+Before building print3 first get raylib.
 
 On linux run
 
 ```console
-$ ./fetch-dependencies.sh
+$ ./fetch-raylib.sh
 ```
 
-On windows run
-
-```console
-$ .\fetch-dependencies.bat
-```
+On windows download the prebuild library for your architecture at [the release page](https://github.com/raysan5/raylib/releases/tag/5.0) and extract it into `.\dep\raylib` directory.
 
 To build print3 via cmake run the following commands.
 
@@ -42,26 +38,24 @@ $ cmake ..
 $ cmake --build .
 ```
 
-The binary will be in the `./build` directory.
-
 # Usage
 
 print3 is meant to be invoked from the command line. To print a model given in the custom description language via stdin simply run
 
 ```console
-$ ./build/print3 STDIN
+$ print3 STDIN
 ```
 
 Or you can visualize multiple models saved in one of the supported formats in one scene by running
 
 ```console
-$ ./build/print3 model1.stl model2.stl
+$ print3 model1.stl model2.stl
 ```
 
 To get a further usage description run the help command
 
 ``` console
-$ ./build/print3 --help
+$ print3 --help
 ```
 
 # Run examples
@@ -69,11 +63,11 @@ $ ./build/print3 --help
 Some example models are provided in the `./examples` directory and can be visualized with print3
 
 ```console
-$ cat examples/stdin.txt | ./build/print3 STDIN STDIN # print the 2 objects within the file
-$ ./build/print3 examples/bunny.stl # print a binary stl model
-$ ./build/print3 examples/bottle.stl # print an ascii stl model
-$ ./build/print3 examples/box.off # print an off model
-$ ./build/print3 examples/cow.obj # print an obj model
+$ cat examples/stdin.txt | print3 STDIN STDIN # print the 2 objects within the file
+$ print3 examples/bunny.stl # print a binary stl model
+$ print3 examples/bottle.stl # print an ascii stl model
+$ print3 examples/box.off # print an off model
+$ print3 examples/cow.obj # print an obj model
 ```
 
 > [!CAUTION]
