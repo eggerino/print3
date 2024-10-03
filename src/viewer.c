@@ -66,6 +66,7 @@ void viewer_run(const ViewerOptions *options, const Scene *scene, const bool *sh
     };
 
     // Create a resizable window
+    SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(options->initial_window_width, options->initial_window_height, options->window_title);
 
