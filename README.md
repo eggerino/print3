@@ -12,7 +12,9 @@ print3 is a visualization and debugging tool for 3D models. Multiple objects fro
 # Supported Formats
 
 print3 supports the following formats:
-* .stl (binary and ascii)
+* Standard Triangulation Language (.stl) (binary and ascii)
+* Object File Format (.off, .noff, .coff, .cnoff)
+* Wavefront OBJ (.obj)
 * custom description language via the standard input
 
 # Build
