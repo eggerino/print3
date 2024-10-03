@@ -19,35 +19,49 @@ print3 supports the following formats:
 
 # Build
 
-To build print3 for linux run the following commands.
+To build print3 first fetch the dependencies.
+
+On linux run
 
 ```console
-$ make raylib # fetches the required raylib version locally
-$ make # builds the application
+$ ./fetch-dependencies.sh
 ```
-The binary will be in the `./bin` directory.
 
-> [!NOTE]
-> Currently only linux is supported.
+On windows run
+
+```console
+$ .\fetch-dependencies.bat
+```
+
+To build print3 via cmake run the following commands.
+
+```console
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cmake --build .
+```
+
+The binary will be in the `./build` directory.
 
 # Usage
 
 print3 is meant to be invoked from the command line. To print a model given in the custom description language via stdin simply run
 
 ```console
-$ ./bin/print3 STDIN
+$ ./build/print3 STDIN
 ```
 
 Or you can visualize multiple models saved in one of the supported formats in one scene by running
 
 ```console
-$ ./bin/print3 model1.stl model2.stl
+$ ./build/print3 model1.stl model2.stl
 ```
 
 To get a further usage description run the help command
 
 ``` console
-$ ./bin/print3 --help
+$ ./build/print3 --help
 ```
 
 # Run examples
@@ -55,11 +69,11 @@ $ ./bin/print3 --help
 Some example models are provided in the `./examples` directory and can be visualized with print3
 
 ```console
-$ cat examples/stdin.txt | ./bin/print3 STDIN STDIN # print the 2 objects within the file
-$ ./bin/print3 examples/bunny.stl # print a binary stl model
-$ ./bin/print3 examples/bottle.stl # print an ascii stl model
-$ ./bin/print3 examples/box.off # print an off model
-$ ./bin/print3 examples/cow.obj # print an obj model
+$ cat examples/stdin.txt | ./build/print3 STDIN STDIN # print the 2 objects within the file
+$ ./build/print3 examples/bunny.stl # print a binary stl model
+$ ./build/print3 examples/bottle.stl # print an ascii stl model
+$ ./build/print3 examples/box.off # print an off model
+$ ./build/print3 examples/cow.obj # print an obj model
 ```
 
 > [!CAUTION]
@@ -69,6 +83,6 @@ $ ./bin/print3 examples/cow.obj # print an obj model
 
 > [!NOTE]
 > Following features are planned to be added in the future:
-> * Support for windows
+> * Test support for windows
 > * Deserialzation for different formats:
 >     * .ply
