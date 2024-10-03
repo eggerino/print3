@@ -207,6 +207,7 @@ void usage(FILE *stream, const char *prog_name) {
         "    The following file formats are supported:\n"
         "    - Standard Triangulation Language (.stl) (binary and ascii)\n"
         "    - Object File Format (.off, .noff, .coff, .cnoff) (ascii)\n"
+        "    - Wavefront OBJ (.obj) (ascii)\n"
         "\n"
         "    The data format for stdin is the following:\n"
         "    - Provide the color of the surface in the first line\n"

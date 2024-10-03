@@ -25,21 +25,6 @@ typedef struct Normals {
     size_t capacity;
 } Normals;
 
-#define advance_err(...)                  \
-    do {                                  \
-        if (peak == ptr) {                \
-            fprintf(stderr, __VA_ARGS__); \
-            exit(1);                      \
-        }                                 \
-        ptr = peak;                       \
-    } while (0)
-
-#define vector3_at(items, index) \
-    (Vector3) { (items)[3 * (index)], (items)[3 * (index) + 1], (items)[3 * (index) + 2] }
-
-#define color_at(items, index) \
-    (Color) { (items)[4 * (index)], (items)[4 * (index) + 1], (items)[4 * (index) + 2], (items)[4 * (index) + 3] }
-
 static char *parse_header(char *ptr, Header *header);
 static char *parse_vertices(char *ptr, const Header *header, Vertices *vertices, Colors *colors, Normals *normals);
 static char *parse_faces(char *ptr, Color fallback_color, const Header *header, const Vertices *vertices,
@@ -116,20 +101,20 @@ char *parse_header(char *ptr, Header *header) {
     char *peak;
     if (header->use_n_dimensions) {
         header->n_dimensions = strtol(ptr, &peak, 10);
-        advance_err("[ERR] Invalid format. nOFF needs a dimension as first value.\n");
+        advance_or_err(ptr, peak, "[ERR] Invalid format. nOFF needs a dimension as first value.\n");
         ptr = next_token(peak);
     }
 
     header->n_vertices = strtol(ptr, &peak, 10);
-    advance_err("[ERR] Invalid format. No vertex count.\n");
+    advance_or_err(ptr, peak, "[ERR] Invalid format. No vertex count.\n");
     ptr = next_token(ptr);
 
     header->n_faces = strtol(ptr, &peak, 10);
-    advance_err("[ERR] Invalid format. No face count.\n");
+    advance_or_err(ptr, peak, "[ERR] Invalid format. No face count.\n");
     ptr = next_token(ptr);
 
     header->n_edges = strtol(ptr, &peak, 10);
-    advance_err("[ERR] Invalid format. No edge count.\n");
+    advance_or_err(ptr, peak, "[ERR] Invalid format. No edge count.\n");
     ptr = next_token(ptr);
 
     return ptr;
@@ -139,7 +124,7 @@ char *parse_header(char *ptr, Header *header) {
     do {                                                                                            \
         for (size_t parse_vector3_err_i = 0; parse_vector3_err_i < (dims); ++parse_vector3_err_i) { \
             da_add(da, strtof(ptr, &peak));                                                         \
-            advance_err(__VA_ARGS__);                                                               \
+            advance_or_err(ptr, peak, __VA_ARGS__);                                                 \
         }                                                                                           \
         for (size_t parse_vector3_err_i = (dims); parse_vector3_err_i < 3; ++parse_vector3_err_i) { \
             da_add(da, 0.0f);                                                                       \
@@ -154,8 +139,9 @@ char *parse_vertices(char *ptr, const Header *header, Vertices *vertices, Colors
         // Parse the vertex coordinates
         for (size_t i_dimension = 0; i_dimension < vertex_dimensions; ++i_dimension) {
             float vertex_component = strtof(ptr, &peak);
-            advance_err("[ERR] Invalid format. %d-th component of the %d-th vertex must be a floating point number.\n",
-                        i_dimension + 1, i_vertex + 1);
+            advance_or_err(ptr, peak,
+                           "[ERR] Invalid format. %d-th component of the %d-th vertex must be a floating point number.\n",
+                           i_dimension + 1, i_vertex + 1);
 
             da_add(*vertices, vertex_component);
         }
@@ -164,7 +150,8 @@ char *parse_vertices(char *ptr, const Header *header, Vertices *vertices, Colors
         // Transform homogenous coordinates to cathesian coordinates if needed
         if (header->use_homogeneous_component) {
             float homogeneous_component = strtof(ptr, &peak);
-            advance_err(
+            advance_or_err(
+                ptr, peak,
                 "[ERR] Invalid format. Homongeneous component of the %d-th vertex must be a floating point number.\n",
                 i_vertex + 1);
 
@@ -177,7 +164,8 @@ char *parse_vertices(char *ptr, const Header *header, Vertices *vertices, Colors
         if (header->use_normals) {
             for (size_t i_dimension = 0; i_dimension < vertex_dimensions; ++i_dimension) {
                 float normal_component = strtof(ptr, &peak);
-                advance_err(
+                advance_or_err(
+                    ptr, peak,
                     "[ERR] Invalid format. %d-th component of the %d-th vertex's normal must be a floating point number.\n",
                     i_dimension + 1, i_vertex + 1);
 
@@ -192,8 +180,9 @@ char *parse_vertices(char *ptr, const Header *header, Vertices *vertices, Colors
         if (header->use_colors) {
             for (size_t i_color = 0; i_color < 4; ++i_color) {
                 unsigned char color_component = strtol(ptr, &peak, 10);
-                advance_err("[ERR] Invalid format. %d-th color component of the %d-th vertex must be a byte.\n", i_color + 1,
-                            i_vertex + 1);
+                advance_or_err(ptr, peak,
+                               "[ERR] Invalid format. %d-th color component of the %d-th vertex must be a byte.\n",
+                               i_color + 1, i_vertex + 1);
 
                 da_add(*colors, color_component);
             }
@@ -217,12 +206,12 @@ char *parse_faces(char *ptr, Color fallback_color, const Header *header, const V
     char *peak;
     for (size_t i_face = 0; i_face < header->n_faces; ++i_face) {
         long number_vertices = strtol(ptr, &peak, 10);
-        advance_err("[ERR] Invalid format. %d-th face has no vertex count.\n", i_face + 1);
+        advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no vertex count.\n", i_face + 1);
 
         long *vertex_indices = malloc(number_vertices * sizeof(long));
         for (long i_vertex = 0; i_vertex < number_vertices; ++i_vertex) {
             vertex_indices[i_vertex] = strtol(ptr, &peak, 10);
-            advance_err("[ERR] Invalid format. %d-th face has no %d-thvertex.\n", i_face + 1, i_vertex + 1);
+            advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no %d-thvertex.\n", i_face + 1, i_vertex + 1);
         }
 
         bool has_face_color = false;
@@ -233,22 +222,26 @@ char *parse_faces(char *ptr, Color fallback_color, const Header *header, const V
             if (has_float_in_line(ptr)) {
                 for (size_t i_color = 0; i_color < 3; ++i_color) {
                     face_color[i_color] = (unsigned char)(strtof(ptr, &peak) * 255.0);
-                    advance_err("[ERR] Invalid format. %d-th face has no %d-th color component.\n", i_face + 1, i_color + 1);
+                    advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no %d-th color component.\n", i_face + 1,
+                                   i_color + 1);
                 }
 
                 if (has_numeric_in_line(ptr)) {
                     face_color[3] = (unsigned char)(strtof(ptr, &peak) * 255.0);
-                    advance_err("[ERR] Invalid format. %d-th face has no alpha color component.\n", i_face + 1);
+                    advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no alpha color component.\n",
+                                   i_face + 1);
                 }
             } else {
                 for (size_t i_color = 0; i_color < 3; ++i_color) {
                     face_color[i_color] = (unsigned char)strtol(ptr, &peak, 10);
-                    advance_err("[ERR] Invalid format. %d-th face has no %d-th color component.\n", i_face + 1, i_color + 1);
+                    advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no %d-th color component.\n", i_face + 1,
+                                   i_color + 1);
                 }
 
                 if (has_numeric_in_line(ptr)) {
                     face_color[3] = (unsigned char)strtol(ptr, &peak, 10);
-                    advance_err("[ERR] Invalid format. %d-th face has no alpha color component.\n", i_face + 1);
+                    advance_or_err(ptr, peak, "[ERR] Invalid format. %d-th face has no alpha color component.\n",
+                                   i_face + 1);
                 }
             }
         }

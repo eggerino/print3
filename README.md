@@ -56,6 +56,8 @@ Some example models are provided in the `./examples` directory and can be visual
 $ cat examples/stdin.txt | ./bin/print3 STDIN STDIN # print the 2 objects within the file
 $ ./bin/print3 examples/bunny.stl # print a binary stl model
 $ ./bin/print3 examples/bottle.stl # print an ascii stl model
+$ ./bin/print3 examples/box.off # print an off model
+$ ./bin/print3 examples/cow.obj # print an obj model
 ```
 
 > [!CAUTION]
@@ -68,4 +70,3 @@ $ ./bin/print3 examples/bottle.stl # print an ascii stl model
 > * Support for windows
 > * Deserialzation for different formats:
 >     * .ply
->     * .obj
