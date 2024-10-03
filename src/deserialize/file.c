@@ -27,7 +27,7 @@ void file_add_to_scene(const char *filename, Color fallback_color, Scene *scene)
     MemoryDeserializer deserializer = get_deserializer(filename);
 
     // Open the file
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "rb");
     if (!fp) {
         fprintf(stderr, "[ERR] Could not open file \"%s\".\n", filename);
         exit(1);
