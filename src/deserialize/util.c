@@ -7,7 +7,7 @@
 #include "raymath.h"
 
 uint32_t binary_buffer_to_u32(const uint8_t *buffer, ByteOrdering ordering) {
-    static_assert(ByteOrdering_COUNT == 2);
+    static_assert(ByteOrdering_COUNT == 2, "Exhaustiveness");
     if (ordering == ORDERING_LITTLE_ENDIAN) {
         return buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
     } else {

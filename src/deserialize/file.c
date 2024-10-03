@@ -45,7 +45,7 @@ void file_add_to_scene(const char *filename, Color fallback_color, Scene *scene)
     }
 
     // Create a buffer for the content + a null termination character.
-    static_assert(sizeof(char) == 1);
+    static_assert(sizeof(char) == 1, "Unsupported platform. Size of char is not one byte.");
     char *buffer = malloc(size + 1);
     if (!buffer) {
         fprintf(stderr, "[Err] Could not allocate a buffer of size %u.\n", size + 1);
