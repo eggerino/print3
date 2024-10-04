@@ -195,7 +195,7 @@ Color parse_color(int argc, const char **argv, int offset, int channels) {
 void usage(FILE *stream, const char *prog_name) {
     fprintf(
         stream,
-        "[USAGE] %s [OPTION ...] [INPUT ...]]\n"
+        "[USAGE] %s [OPTION ...] [INPUT ...]\n"
         "\n"
         "\n"
         "- INPUT: \"STDIN\" | FILE\n"
@@ -208,6 +208,7 @@ void usage(FILE *stream, const char *prog_name) {
         "    - Standard Triangulation Language (.stl) (binary and ascii)\n"
         "    - Object File Format (.off, .noff, .coff, .cnoff) (ascii)\n"
         "    - Wavefront OBJ (.obj) (ascii)\n"
+        "    - Polygon File Format (.ply) (binary and ascii)\n"
         "\n"
         "    The data format for stdin is the following:\n"
         "    - Provide the color of the surface in the first line\n"

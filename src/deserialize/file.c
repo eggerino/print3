@@ -6,9 +6,10 @@
 #include "memory.h"
 #include "obj.h"
 #include "off.h"
+#include "ply.h"
 #include "stl.h"
 
-#define EXTENSION_MAP_COUNT 6
+#define EXTENSION_MAP_COUNT 7
 
 // Use array of key value pair and scan linearly for the entry
 // With many deserializers consider implementing a hash table
@@ -16,8 +17,8 @@ struct {
     const char *extension;
     MemoryDeserializer deserializer;
 } extension_map[EXTENSION_MAP_COUNT] = {
-    {".stl", stl_deserialize},  {".off", off_deserialize},   {".coff", off_deserialize},
-    {".noff", off_deserialize}, {".cnoff", off_deserialize}, {".obj", obj_deserialize},
+    {".stl", stl_deserialize},   {".off", off_deserialize}, {".coff", off_deserialize}, {".noff", off_deserialize},
+    {".cnoff", off_deserialize}, {".obj", obj_deserialize}, {".ply", ply_deserialize},
 
 };
 

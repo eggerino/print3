@@ -5,6 +5,7 @@ add_executable(${PROJECT_NAME}
     "src/deserialize/file.c"
     "src/deserialize/obj.c"
     "src/deserialize/off.c"
+    "src/deserialize/ply.c"
     "src/deserialize/stdin.c"
     "src/deserialize/stl.c"
     "src/deserialize/util.c"

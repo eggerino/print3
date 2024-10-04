@@ -6,6 +6,17 @@
 
 #include "raymath.h"
 
+uint8_t binary_buffer_to_u8(const uint8_t *buffer) { return *buffer; }
+
+uint16_t binary_buffer_to_u16(const uint8_t *buffer, ByteOrdering ordering) {
+    static_assert(ByteOrdering_COUNT == 2, "Exhaustiveness");
+    if (ordering == ORDERING_LITTLE_ENDIAN) {
+        return buffer[1] << 8 | buffer[0];
+    } else {
+        return buffer[0] << 8 | buffer[1];
+    }
+}
+
 uint32_t binary_buffer_to_u32(const uint8_t *buffer, ByteOrdering ordering) {
     static_assert(ByteOrdering_COUNT == 2, "Exhaustiveness");
     if (ordering == ORDERING_LITTLE_ENDIAN) {
@@ -15,11 +26,32 @@ uint32_t binary_buffer_to_u32(const uint8_t *buffer, ByteOrdering ordering) {
     }
 }
 
+uint64_t binary_buffer_to_u64(const uint8_t *buffer, ByteOrdering ordering) {
+    static_assert(ByteOrdering_COUNT == 2, "Exhaustiveness");
+    uint64_t result = 0;
+
+    for (int i = 0; i < 8; ++i) {
+        int shift = ordering == ORDERING_LITTLE_ENDIAN ? 8 * i : 8 * (7 - i);
+
+        result = result | buffer[i] << shift;
+    }
+
+    return result;
+}
+
 float binary_buffer_to_f32_IEEE754(const uint8_t *buffer, ByteOrdering ordering) {
     uint32_t as_u32 = binary_buffer_to_u32(buffer, ordering);
 
 #if defined(__STDC_IEC_559__)
     return *((float *)&as_u32);
+#endif
+}
+
+double binary_buffer_to_f64_IEEE754(const uint8_t *buffer, ByteOrdering ordering) {
+    uint64_t as_u64 = binary_buffer_to_u64(buffer, ordering);
+
+#if defined(__STDC_IEC_559__)
+    return *((double *)&as_u64);
 #endif
 }
 

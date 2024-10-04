@@ -26,8 +26,13 @@ typedef enum ByteOrdering {
 #define color_at(items, index) \
     (Color) { (items)[4 * (index)], (items)[4 * (index) + 1], (items)[4 * (index) + 2], (items)[4 * (index) + 3] }
 
+uint8_t binary_buffer_to_u8(const uint8_t *buffer);
+uint16_t binary_buffer_to_u16(const uint8_t *buffer, ByteOrdering ordering);
 uint32_t binary_buffer_to_u32(const uint8_t *buffer, ByteOrdering ordering);
+uint64_t binary_buffer_to_u64(const uint8_t *buffer, ByteOrdering ordering);
 float binary_buffer_to_f32_IEEE754(const uint8_t *buffer, ByteOrdering ordering);
+double binary_buffer_to_f64_IEEE754(const uint8_t *buffer, ByteOrdering ordering);
+
 char *str_skip(char *str, const char *skip);
 char *str_skip_whitespace(char *str);
 bool order_vertices(const Vector3 *normal, Vector3 *v1, Vector3 *v2, Vector3 *v3);
