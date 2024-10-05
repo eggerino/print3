@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parsing.h"
 #include "raymath.h"
-#include "util.h"
 
 typedef enum Format {
     FORMAT_ASCII,

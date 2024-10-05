@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parsing.h"
 #include "raymath.h"
-#include "util.h"
 
 // scii implementation
 static void ascii_stl_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene);
