@@ -68,14 +68,10 @@ $ print3 examples/bunny.stl # print a binary stl model
 $ print3 examples/bottle.stl # print an ascii stl model
 $ print3 examples/box.off # print an off model
 $ print3 examples/cow.obj # print an obj model
+$ print3 examples/ant.ply # print a ply model
 ```
 
 > [!CAUTION]
 > # Gotchas when using STDIN
 >
 > When creating a screenshot of the current view on the scene, print3 will ask for a filename on the standard input. While is is possible to pipe the output of an other program to print3's input (e.q. in order to visualize a model without persisting to disk), be aware that the screenshot feature might not behave as expected since you can not provide the input in the command line anymore.
-
-> [!NOTE]
-> Following features are planned to be added in the future:
-> * Deserialzation for different formats:
->     * .ply

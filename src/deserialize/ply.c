@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "raymath.h"
 #include "util.h"
 
 typedef enum Format {
@@ -85,6 +86,10 @@ static char *bin_parse_face(ByteOrdering ordering, char *ptr, const FaceElement 
 static uint64_t bin_get_integer(void *buffer, ByteOrdering ordering, DataTypeInfo info);
 static float bin_get_float(void *buffer, ByteOrdering ordering, DataTypeInfo info);
 
+// Triangluation
+static void triangulate_into_scene(const Vertices *vertices, const Vertices *normals, const Colors *colors,
+                                   const Indices *indices, Scene *scene);
+
 void ply_deserialize(void *buffer, size_t size, Color fallback_color, Scene *scene) {
     char *ptr = buffer;
     char *peak;
@@ -119,10 +124,7 @@ void ply_deserialize(void *buffer, size_t size, Color fallback_color, Scene *sce
         }
     }
 
-    // Try implementing the following algorithm to convert polygons to triangles
-    // https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-    printf("TODO: Build scene out of polygons.\n");
-    exit(1);
+    triangulate_into_scene(&vertices, &normals, &colors, &indices, scene);
 }
 
 char *parse_header(char *ptr, Header *header) {
@@ -610,4 +612,72 @@ uint64_t bin_get_integer(void *buffer, ByteOrdering ordering, DataTypeInfo info)
 
 float bin_get_float(void *buffer, ByteOrdering ordering, DataTypeInfo info) {
     return info.size == 4 ? binary_buffer_to_f32_IEEE754(buffer, ordering) : binary_buffer_to_f64_IEEE754(buffer, ordering);
+}
+
+// *************
+// Triangluation
+// *************
+
+void triangulate_into_scene(const Vertices *vertices, const Vertices *normals, const Colors *colors, const Indices *indices,
+                            Scene *scene) {
+    Object object = {0};
+
+    bool use_normals = normals->length > 0;
+
+    size_t polygon_index = 0;
+    size_t index_index = 0;
+    while (index_index < indices->length) {
+        size_t polygon_count = indices->items[index_index];
+        if (polygon_count != 3) {
+            fprintf(stderr,
+                    "[ERR] Unsupported data. %d-th polygon does not have 3 vertices. Only polygons with 3 vertices are "
+                    "supported. Rendering polygons with more vertices is ambigous.\n",
+                    polygon_index + 1);
+            exit(1);
+        }
+
+        size_t index1 = indices->items[index_index + 1];
+        size_t index2 = indices->items[index_index + 2];
+        size_t index3 = indices->items[index_index + 3];
+
+        // printf("3 %d %d %d\n", index1, index2, index3);
+        // if (polygon_index == 10) exit(1);
+
+        Vector3 v1 = vector3_at(vertices->items, index1);
+        Vector3 v2 = vector3_at(vertices->items, index2);
+        Vector3 v3 = vector3_at(vertices->items, index3);
+
+        Color c1 = color_at(colors->items, index1);
+        Color c2 = color_at(colors->items, index2);
+        Color c3 = color_at(colors->items, index3);
+
+        // Swap vertices to match normals if needed
+        if (use_normals) {
+            Vector3 n1 = vector3_at(normals->items, index1);
+            Vector3 n2 = vector3_at(normals->items, index2);
+            Vector3 n3 = vector3_at(normals->items, index3);
+            Vector3 n = Vector3Scale(Vector3Add(n1, Vector3Add(n2, n3)), 1.0f / 3.0f);
+
+            if (order_vertices(&n, &v1, &v2, &v3)) {
+                Color temp = c2;
+                c2 = c3;
+                c3 = temp;
+            }
+        }
+
+        // Add triangle to object
+        da_add_vector3(object.vertices, v1);
+        da_add_vector3(object.vertices, v2);
+        da_add_vector3(object.vertices, v3);
+
+        da_add_color(object.colors, c1);
+        da_add_color(object.colors, c2);
+        da_add_color(object.colors, c3);
+
+        // Skip the count and the every polygon vertex
+        index_index += 1 + polygon_count;
+        ++polygon_index;
+    }
+
+    da_add(scene->objects, object);
 }
