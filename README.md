@@ -15,6 +15,7 @@ print3 supports the following formats:
 * Standard Triangulation Language (.stl) (binary and ascii)
 * Object File Format (.off, .noff, .coff, .cnoff)
 * Wavefront OBJ (.obj)
+* Polygon File Format (.ply) (binary and ascii)
 * custom description language via the standard input [Be aware of the pitfalls when providing input via STDIN](#gotchas-when-using-stdin)
 
 # Build
